@@ -40,6 +40,11 @@ server {
     proxy_http_version 1.1;
     proxy_pass      http://JUMPSERVER_HOST:WEB_PORT;
   }
+  location /file/upload {
+    proxy_set_header Connection "";
+    proxy_http_version 1.1;
+    proxy_pass      http://127.0.0.1:8001;
+  }
 
   location /_ws/ {
     keepalive_timeout 600s;

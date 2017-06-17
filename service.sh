@@ -39,8 +39,9 @@ start() {
              success "$jump_start"
              echo
         else
-            daemon python $jumpserver_dir/manage.py crontab add &>> /var/log/jumpserver.log 2>&1
-            daemon python $jumpserver_dir/run_server.py &> /dev/null 2>&1 &
+            daemon python $jumpserver_dir/manage.py crontab add &>> $jumpserver_dir/logs/jumpserver_cron.log 2>&1
+            daemon python $jumpserver_dir/run_server.py &>> $jumpserver_dir/logs/jumpserver_run.log 2>&1
+            daemon python $jumpserver_dir/manager.py runserver 127.0.0.1:8001 &>> $jumpserver_dir/logs/jumpserver_run.log 2>&1
             sleep 1
             echo -n "$jump_start"
             ps axu | grep 'run_server' | grep -v 'grep' &> /dev/null
@@ -62,8 +63,9 @@ start() {
 
 stop() {
     echo -n $"Stopping ${PROC_NAME} service:"
-    daemon python $jumpserver_dir/manage.py crontab remove &>> /var/log/jumpserver.log 2>&1
-    ps aux | grep -E 'run_server.py' | grep -v grep | awk '{print $2}' | xargs kill -9 &> /dev/null
+    daemon python $jumpserver_dir/manage.py crontab remove &>> $jumpserver_dir/logs/jumpserver_cron.log 2>&1
+    ps aux | grep -E 'run_server.py' | grep -v grep | awk '{print $2}' | xargs kill -9 &>> $jumpserver_dir/logs/jumpserver_run.log 2>&1
+    ps aux | grep -E 'manager.py runserver' | grep -v grep | awk '{print $2}' | xargs kill -9 &>> $jumpserver_dir/logs/jumpserver_run.log 2>&1
     ret=$?
     if [ $ret -eq 0 ]; then
         echo_success
