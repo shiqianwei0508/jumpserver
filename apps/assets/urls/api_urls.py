@@ -1,57 +1,58 @@
 # coding:utf-8
-from django.conf.urls import url
-from .. import api
-from rest_framework import routers
+from django.urls import path
 from rest_framework_bulk.routes import BulkRouter
+
+from labels.api import LabelViewSet
+from .. import api
 
 app_name = 'assets'
 
-
 router = BulkRouter()
-router.register(r'v1/asset-groups', api.AssetGroupViewSet, 'asset-group')
-router.register(r'v1/assets', api.AssetViewSet, 'asset')
-router.register(r'v1/idc', api.IDCViewSet, 'idc')
-router.register(r'v1/admin-user', api.AdminUserViewSet, 'admin-user')
-router.register(r'v1/system-user', api.SystemUserViewSet, 'system-user')
+router.register(r'categories', api.CategoryViewSet, 'category')
+router.register(r'assets', api.AssetViewSet, 'asset')
+router.register(r'hosts', api.HostViewSet, 'host')
+router.register(r'devices', api.DeviceViewSet, 'device')
+router.register(r'databases', api.DatabaseViewSet, 'database')
+router.register(r'webs', api.WebViewSet, 'web')
+router.register(r'clouds', api.CloudViewSet, 'cloud')
+router.register(r'gpts', api.GPTViewSet, 'gpt')
+router.register(r'customs', api.CustomViewSet, 'custom')
+router.register(r'platforms', api.AssetPlatformViewSet, 'platform')
+router.register(r'nodes', api.NodeViewSet, 'node')
+router.register(r'domains', api.DomainViewSet, 'domain')
+router.register(r'gateways', api.GatewayViewSet, 'gateway')
+router.register(r'favorite-assets', api.FavoriteAssetViewSet, 'favorite-asset')
+router.register(r'protocol-settings', api.PlatformProtocolViewSet, 'protocol-setting')
+router.register(r'labels', LabelViewSet, 'label')
+router.register(r'my-asset', api.MyAssetViewSet, 'my-asset')
 
 urlpatterns = [
-    url(r'^v1/assets_bulk/$', api.AssetListUpdateApi.as_view(), name='asset-bulk-update'),
-    url(r'^v1/system-user/(?P<pk>[0-9]+)/auth-info/', api.SystemUserAuthInfoApi.as_view(),
-        name='system-user-auth-info'),
-    url(r'^v1/assets/(?P<pk>\d+)/groups/$',
-        api.AssetUpdateGroupApi.as_view(), name='asset-update-group'),
+    # path('assets/<uuid:pk>/gateways/', api.AssetGatewayListApi.as_view(), name='asset-gateway-list'),
+    path('protocols/', api.ProtocolListApi.as_view(), name='asset-protocol'),
+    path('assets/<uuid:pk>/tasks/', api.AssetTaskCreateApi.as_view(), name='asset-task-create'),
+    path('assets/tasks/', api.AssetsTaskCreateApi.as_view(), name='assets-task-create'),
+    path('assets/<uuid:pk>/perm-users/', api.AssetPermUserListApi.as_view(), name='asset-perm-user-list'),
+    path('assets/<uuid:pk>/perm-users/<uuid:perm_user_id>/permissions/', api.AssetPermUserPermissionsListApi.as_view(),
+         name='asset-perm-user-permission-list'),
+    path('assets/<uuid:pk>/perm-user-groups/', api.AssetPermUserGroupListApi.as_view(),
+         name='asset-perm-user-group-list'),
+    path('assets/<uuid:pk>/perm-user-groups/<uuid:perm_user_group_id>/permissions/',
+         api.AssetPermUserGroupPermissionsListApi.as_view(), name='asset-perm-user-group-permission-list'),
 
-    url(r'^v1/assets/(?P<pk>\d+)/refresh/$',
-        api.AssetRefreshHardwareView.as_view(), name='asset-refresh'),
-    url(r'^v1/assets/(?P<pk>\d+)/admin-user-test/$',
-        api.AssetAdminUserTestView.as_view(), name='asset-admin-user-test'),
+    path('nodes/category/tree/', api.CategoryTreeApi.as_view(), name='asset-category-tree'),
+    path('nodes/children/tree/', api.NodeChildrenAsTreeApi.as_view(), name='node-children-tree'),
+    path('nodes/<uuid:pk>/children/', api.NodeChildrenApi.as_view(), name='node-children'),
+    path('nodes/children/', api.NodeChildrenApi.as_view(), name='node-children-2'),
+    path('nodes/<uuid:pk>/children/add/', api.NodeAddChildrenApi.as_view(), name='node-add-children'),
+    path('nodes/<uuid:pk>/assets/', api.NodeAssetsApi.as_view(), name='node-assets'),
+    path('nodes/<uuid:pk>/assets/add/', api.NodeAddAssetsApi.as_view(), name='node-add-assets'),
+    path('nodes/<uuid:pk>/assets/replace/', api.MoveAssetsToNodeApi.as_view(), name='node-replace-assets'),
+    path('nodes/<uuid:pk>/assets/remove/', api.NodeRemoveAssetsApi.as_view(), name='node-remove-assets'),
+    path('nodes/<uuid:pk>/tasks/', api.NodeTaskCreateApi.as_view(), name='node-task-create'),
 
-    url(r'^v1/assets/(?P<pk>\d+)/system-users/$',
-        api.SystemUserUpdateApi.as_view(), name='asset-update-system-users'),
-
-    url(r'^v1/asset-groups/(?P<pk>\d+)/push-system-user/$',
-        api.AssetGroupPushSystemUserView.as_view(), name='asset-group-push-system-user'),
-
-    # update the system users, which add and delete the asset to the system user
-    url(r'^v1/system_user/(?P<pk>\d+)/assets/$',
-        api.SystemUserUpdateAssetsApi.as_view(), name='systemuser-update-assets'),
-
-    url(r'^v1/system_user/(?P<pk>\d+)/groups/$',
-        api.SystemUserUpdateAssetGroupApi.as_view(), name='systemuser-update-assetgroups'),
-
-    # update the asset group, which add or delete the asset to the group
-    url(r'^v1/groups/(?P<pk>\d+)/assets/$',
-        api.AssetGroupUpdateApi.as_view(), name='asset-groups-update'),
-
-    # update the asset group, and add or delete the system_user to the group
-    url(r'^v1/groups/(?P<pk>\d+)/system-users/$',
-        api.AssetGroupUpdateSystemUserApi.as_view(), name='asset-groups-update-systemusers'),
-
-    # update the IDC, and add or delete the assets to the IDC
-    url(r'^v1/idc/(?P<pk>\d+)/assets/$',
-        api.IDCUpdateAssetsApi.as_view(), name='idc-update-assets'),
-
+    path('gateways/<uuid:pk>/test-connective/', api.GatewayTestConnectionApi.as_view(), name='test-gateway-connective'),
+    path('platform-automation-methods/', api.PlatformAutomationMethodsApi.as_view(),
+         name='platform-automation-methods'),
 ]
 
 urlpatterns += router.urls
-

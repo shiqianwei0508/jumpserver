@@ -1,78 +1,50 @@
 # ~*~ coding: utf-8 ~*~
-
-from __future__ import absolute_import, unicode_literals
-
-import json
-import time
+import os
 import uuid
+from django.conf import settings
 
-from django.utils import timezone
-
-from assets.models import Asset
-from common.utils import get_logger
-from .ansible.runner import AdHocRunner
+from common.utils import get_logger, make_dirs
+from jumpserver.const import PROJECT_DIR
+from perms.models import PermNode
+from perms.utils import UserPermAssetUtil
+from assets.models import Asset, Node
 
 logger = get_logger(__file__)
 
 
-def run_AdHoc(task_tuple, assets,
-              task_name='Ansible AdHoc runner',
-              task_id=None, pattern='all',
-              record=True, verbose=True):
-    """
-    :param task_tuple:  (('module_name', 'module_args'), ('module_name', 'module_args'))
-    :param assets: [asset1, asset2]
-    :param task_name:
-    :param task_id:
-    :param pattern:
-    :param record:
-    :param verbose:
-    :return: summary: {'success': [], 'failed': [{'192.168.1.1': 'msg'}]}
-             result: {'contacted': {'hostname': [{''}, {''}], 'dark': []}
-    """
+def get_task_log_path(base_path, task_id, level=2):
+    task_id = str(task_id)
+    try:
+        uuid.UUID(task_id)
+    except:
+        return os.path.join(PROJECT_DIR, 'data', 'caution.txt')
 
-    if not assets:
-        logger.warning('Empty assets, runner cancel')
-        return
-    if isinstance(assets[0], Asset):
-        assets = [asset._to_secret_json() for asset in assets]
-    if task_id is None:
-        task_id = str(uuid.uuid4())
+    rel_path = os.path.join(*task_id[:level], task_id + '.log')
+    path = os.path.join(base_path, rel_path)
+    make_dirs(os.path.dirname(path), exist_ok=True)
+    return path
 
-    runner = AdHocRunner(assets)
-    if record:
-        from .models import Task
-        if not Task.objects.filter(uuid=task_id):
-            record = Task(uuid=task_id,
-                          name=task_name,
-                          assets=','.join(str(asset['id']) for asset in assets),
-                          module_args=task_tuple,
-                          pattern=pattern)
-            record.save()
+
+def get_ansible_log_verbosity(verbosity=0):
+    if settings.DEBUG_ANSIBLE:
+        return 10
+    if verbosity is None and settings.DEBUG:
+        return 1
+    return verbosity
+
+
+def merge_nodes_and_assets(nodes, assets, user):
+    if not nodes:
+        return assets
+    perm_util = UserPermAssetUtil(user=user)
+    for node_id in nodes:
+        if isinstance(node_id, Node):
+            node_id = node_id.id
+        if node_id == PermNode.FAVORITE_NODE_KEY:
+            node_assets = perm_util.get_favorite_assets()
+        elif node_id == PermNode.UNGROUPED_NODE_KEY:
+            node_assets = perm_util.get_ungroup_assets()
         else:
-            record = Task.objects.get(uuid=task_id)
-            record.date_start = timezone.now()
-            record.date_finished = None
-            record.timedelta = None
-            record.is_finished = False
-            record.is_success = False
-            record.save()
-    ts_start = time.time()
-    if verbose:
-        logger.debug('Start runner {}'.format(task_name))
-    result = runner.run(task_tuple, pattern=pattern, task_name=task_name)
-    timedelta = round(time.time() - ts_start, 2)
-    summary = runner.clean_result()
-    if record:
-        record.date_finished = timezone.now()
-        record.is_finished = True
-        if verbose:
-            record.result = json.dumps(result, indent=4, sort_keys=True)
-        record.summary = json.dumps(summary)
-        record.timedelta = timedelta
-        if len(summary['failed']) == 0:
-            record.is_success = True
-        else:
-            record.is_success = False
-        record.save()
-    return summary, result
+            node, node_assets = perm_util.get_node_all_assets(node_id)
+        assets.extend(node_assets.exclude(id__in=[asset.id for asset in assets]))
+    return assets

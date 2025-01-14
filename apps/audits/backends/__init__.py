@@ -1,10 +1,18 @@
 from importlib import import_module
+
 from django.conf import settings
 
-command_engine = import_module(settings.COMMAND_STORE_BACKEND)
-command_store = command_engine.CommandStore()
-record_engine = import_module(settings.RECORD_STORE_BACKEND)
-record_store = record_engine.RecordStore()
-from .command.serializers import CommandLogSerializer
+
+TYPE_ENGINE_MAPPING = {
+    'db': 'audits.backends.db',
+    'es': 'audits.backends.es',
+}
 
 
+def get_operate_log_storage(default=False):
+    engine_mod = import_module(TYPE_ENGINE_MAPPING['db'])
+    es_config = settings.OPERATE_LOG_ELASTICSEARCH_CONFIG
+    if not default and es_config:
+        engine_mod = import_module(TYPE_ENGINE_MAPPING['es'])
+    storage = engine_mod.OperateLogStore(es_config)
+    return storage

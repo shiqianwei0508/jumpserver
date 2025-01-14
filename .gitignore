@@ -5,6 +5,7 @@
 .env
 env
 env*
+venv
 dist
 build
 *.egg
@@ -14,9 +15,11 @@ dump.rdb
 .tox
 .cache/
 .idea/
+.vscode/
+.fleet/
 db.sqlite3
 config.py
-migrations/
+config.yml
 *.log
 host_rsa_key
 *.bat
@@ -24,3 +27,22 @@ tags
 jumpserver.iml
 .python-version
 tmp/*
+sessions/*
+media
+celerybeat.pid
+django.db
+celerybeat-schedule.db
+docs/_build/
+xpack
+xpack.bak
+### Vagrant ###
+.vagrant/
+release/*
+releashe
+/apps/script.py
+data/*
+test.py
+.history/
+.test/
+*.mo
+apps.iml

@@ -1,15 +1,14 @@
 # ~*~ coding: utf-8 ~*~
 from __future__ import unicode_literals
+from django.urls import path
 
-
-from django.conf.urls import url
 from .. import views
 
 __all__ = ["urlpatterns"]
 
+app_name = "ops"
+
 urlpatterns = [
-    # TResource Task url
-    url(r'^task/$', views.TaskListView.as_view(), name='task-list'),
-    url(r'^task/(?P<pk>[0-9a-zA-Z-]+)/$', views.TaskDetailView.as_view(), name='task-detail'),
-    url(r'^task/(?P<pk>[0-9a-zA-Z-]+)/run/$', views.TaskRunView.as_view(), name='task-run'),
+    # Resource Task url
+    path('celery/task/<uuid:pk>/log/', views.CeleryTaskLogView.as_view(), name='celery-task-log'),
 ]

@@ -2,22 +2,19 @@
 # -*- coding: utf-8 -*-
 #
 
-from . import IDC, SystemUser, AdminUser, AssetGroup, Asset
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
-__all__ = ['init_model', 'generate_fake']
+from common.utils import validate_ssh_private_key
 
-
-def init_model():
-    for cls in [IDC, SystemUser, AdminUser, AssetGroup, Asset]:
-        if hasattr(cls, 'initial'):
-            cls.initial()
-
-
-def generate_fake():
-    for cls in [IDC, SystemUser, AdminUser, AssetGroup, Asset]:
-        if hasattr(cls, 'generate_fake'):
-            cls.generate_fake()
+__all__ = [
+    'private_key_validator',
+]
 
 
-if __name__ == '__main__':
-    pass
+def private_key_validator(value):
+    if not validate_ssh_private_key(value):
+        raise ValidationError(
+            _('%(value)s is not an even number'),
+            params={'value': value},
+        )

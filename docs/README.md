@@ -1,4 +1,6 @@
-#### [项目结构描述](https://code.simcu.com/jumpserver/jumpserver/blob/master/docs/project_structure.md)
-#### [Python代码规范](https://code.simcu.com/jumpserver/jumpserver/blob/master/docs/python_style_guide.md)
-#### [API设计规范](https://code.simcu.com/jumpserver/jumpserver/blob/master/docs/api_style_guide.md)
-#### [表结构](https://code.simcu.com/jumpserver/jumpserver/wikis/table_structure_image)
+## 说明
+文档已移动到docs分支，该目录中不是最新文档, 请提交到docs分支
+
+## 访问在线文档
+[访问](https://docs.jumpserver.org)
+

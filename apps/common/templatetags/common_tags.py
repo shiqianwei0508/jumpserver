@@ -2,9 +2,9 @@
 
 from django import template
 from django.utils import timezone
-from django.conf import settings
+from django.utils.translation import gettext as _
 from django.utils.html import escape
-from audits.backends import command_store
+from django import forms
 
 register = template.Library()
 
@@ -30,8 +30,13 @@ def pagination_range(total_page, current_num=1, display=5):
     except ValueError:
         current_num = 1
 
-    start = current_num - display/2 if current_num > display/2 else 1
-    end = start + display if start + display <= total_page else total_page + 1
+    half_display = int(display/2)
+    start = current_num - half_display if current_num > half_display else 1
+    if start + display <= total_page:
+        end = start + display
+    else:
+        end = total_page + 1
+        start = end - display if end > display else 1
 
     return range(start, end)
 
@@ -54,7 +59,7 @@ def int_to_str(value):
 def ts_to_date(ts):
     try:
         ts = float(ts)
-    except TypeError:
+    except (TypeError, ValueError):
         ts = 0
     dt = timezone.datetime.fromtimestamp(ts).\
         replace(tzinfo=timezone.get_current_timezone())
@@ -67,5 +72,59 @@ def to_html(s):
 
 
 @register.filter
-def proxy_log_commands(log_id):
-    return command_store.filter(proxy_log_id=log_id)
+def time_util_with_seconds(date_from, date_to):
+    if not date_from:
+        return ''
+    if not date_to:
+        return ''
+        date_to = timezone.now()
+
+    delta = date_to - date_from
+    seconds = delta.seconds
+    if seconds < 60:
+        return '{} s'.format(seconds)
+    elif seconds < 60*60:
+        return '{} m'.format(seconds//60)
+    else:
+        return '{} h'.format(seconds//3600)
+
+
+@register.filter
+def is_bool_field(field):
+    if isinstance(field, forms.BooleanField):
+        return True
+    else:
+        return False
+
+
+@register.filter
+def is_image_field(field):
+    if isinstance(field, forms.ImageField):
+        return True
+    else:
+        return False
+
+
+@register.filter
+def to_dict(data):
+    return dict(data)
+
+
+@register.filter
+def sort(data):
+    return sorted(data)
+
+
+@register.filter
+def subtract(value, arg):
+    return value - arg
+
+
+@register.filter
+def state_show(state):
+    success = '<i class ="fa fa-check text-navy"> </i>'
+    failed = '<i class ="fa fa-times text-danger"> </i>'
+    if state:
+        return success
+    else:
+        return failed

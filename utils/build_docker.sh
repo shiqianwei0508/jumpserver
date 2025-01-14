@@ -1,5 +1,12 @@
 #!/bin/bash
 #
+utils_dir=$(dirname "$0")
+project_dir=$(dirname "${utils_dir}")
 
-cd ..
-docker build -t jumpserver/jumpserver:v0.4.0-beta1 .
+version=$1
+if [ -z "$version" ]; then
+  echo "Usage: sh build version"
+  exit
+fi
+
+cd "${project_dir}" && docker build -t "jumpserver/jumpserver:${version}" .
